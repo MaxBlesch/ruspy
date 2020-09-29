@@ -194,6 +194,7 @@ def estimate_nfxp(
     result_cost_params = {}
 
     tic = time.perf_counter()
+
     min_result = minimize(
         criterion, criterion_kwargs=kwargs, gradient_kwargs=kwargs, **optimizer_options,
     )

@@ -61,11 +61,15 @@ def loglike_cost_params_individual(
 
 
     """
-    params = params["value"].to_numpy()
-    costs = calc_obs_costs(num_states, maint_func, params, scale)
+    if "omega" in params.index:
+        omega = params.loc["omega", "value"]
+        cost_params = params.drop("omega")["value"].to_numpy()
+    else:
+        cost_params = params["value"].to_numpy()
+    costs = calc_obs_costs(num_states, maint_func, cost_params, scale)
 
     ev, contr_step_count, newt_kant_step_count = get_ev(
-        params, trans_mat, costs, disc_fac, alg_details
+        cost_params, trans_mat, costs, disc_fac, alg_details
     )
     config.total_contr_count += contr_step_count
     config.total_newt_kant_count += newt_kant_step_count
@@ -179,11 +183,15 @@ def derivative_loglike_cost_params_individual(
 
 
     """
-    params = params["value"].to_numpy()
-    dev = np.zeros((decision_mat.shape[1], len(params)))
-    obs_costs = calc_obs_costs(num_states, maint_func, params, scale)
+    if "omega" in params.index:
+        cost_params = params.drop("omega")["value"].to_numpy()
+    else:
+        cost_params = params["value"].to_numpy()
 
-    ev = get_ev(params, trans_mat, obs_costs, disc_fac, alg_details)[0]
+    dev = np.zeros((decision_mat.shape[1], len(params)))
+    obs_costs = calc_obs_costs(num_states, maint_func, cost_params, scale)
+
+    ev = get_ev(cost_params, trans_mat, obs_costs, disc_fac, alg_details)[0]
 
     p_choice = choice_prob_gumbel(ev, obs_costs, disc_fac)
     maint_cost_dev = maint_func_dev(num_states, scale)
@@ -192,8 +200,8 @@ def derivative_loglike_cost_params_individual(
     like_dev_rc = like_hood_data_individual(lh_values_rc, decision_mat, state_mat)
     dev[:, 0] = like_dev_rc
 
-    for i in range(len(params) - 1):
-        if len(params) == 2:
+    for i in range(len(cost_params) - 1):
+        if len(cost_params) == 2:
             cost_dev_param = maint_cost_dev
         else:
             cost_dev_param = maint_cost_dev[:, i]
@@ -295,6 +303,7 @@ def get_ev(params, trans_mat, obs_costs, disc_fac, alg_details):
     """
     global ev_intermed
     global current_params
+
     if (ev_intermed is not None) & np.array_equal(current_params, params):
         ev = ev_intermed
         ev_intermed = None

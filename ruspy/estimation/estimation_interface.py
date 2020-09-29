@@ -119,6 +119,7 @@ def select_optimizer_options(init_dict, num_params_costs, num_states):
                     np.arange(1, -num_params_costs + 1, -1),
                 ),
                 columns=["value"],
+                index=["RC"] + [f"theta_1{num}" for num in range(1, num_params_costs)]
             )
         else:
             optimizer_options["params"] = np.concatenate(
