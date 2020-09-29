@@ -13,6 +13,8 @@ from ruspy.model_code.fix_point_alg import calc_fixp
 from ruspy.model_code.fix_point_alg import contr_op_dev_wrt_params
 from ruspy.model_code.fix_point_alg import contr_op_dev_wrt_rc
 from ruspy.model_code.fix_point_alg import solve_equ_system_fixp
+from ruspy.estimation.ambiguity_estimation import calc_fixp_worst
+from scipy.stats import chi2
 
 
 ev_intermed = None
@@ -61,18 +63,30 @@ def loglike_cost_params_individual(
 
 
     """
+
     if "omega" in params.index:
         omega = params.loc["omega", "value"]
         cost_params = params.drop("omega")["value"].to_numpy()
+        print(cost_params, omega)
+        p_ml = trans_mat[0, 0: 3]
+        sample_size = 4292
+        rho = chi2.ppf(omega, len(p_ml) - 1) / (2 * (sample_size))
+
+        costs = calc_obs_costs(num_states, maint_func, cost_params, scale)
+        ev, success, converge_crit, num_eval = calc_fixp_worst(
+            num_states, p_ml, costs, disc_fac, rho, threshold=1e-6, max_it=1000000
+        )
+
+        if not success:
+            raise ValueError("Not converging.")
     else:
         cost_params = params["value"].to_numpy()
-    costs = calc_obs_costs(num_states, maint_func, cost_params, scale)
-
-    ev, contr_step_count, newt_kant_step_count = get_ev(
-        cost_params, trans_mat, costs, disc_fac, alg_details
-    )
-    config.total_contr_count += contr_step_count
-    config.total_newt_kant_count += newt_kant_step_count
+        costs = calc_obs_costs(num_states, maint_func, cost_params, scale)
+        ev, contr_step_count, newt_kant_step_count = get_ev(
+            cost_params, trans_mat, costs, disc_fac, alg_details
+        )
+        config.total_contr_count += contr_step_count
+        config.total_newt_kant_count += newt_kant_step_count
 
     p_choice = choice_prob_gumbel(ev, costs, disc_fac)
     log_like = like_hood_data_individual(np.log(p_choice), decision_mat, state_mat)
@@ -183,15 +197,16 @@ def derivative_loglike_cost_params_individual(
 
 
     """
-    if "omega" in params.index:
-        cost_params = params.drop("omega")["value"].to_numpy()
+    if "rho" in params.index:
+        cost_params = params.drop("rho")["value"].to_numpy()
     else:
         cost_params = params["value"].to_numpy()
 
     dev = np.zeros((decision_mat.shape[1], len(params)))
     obs_costs = calc_obs_costs(num_states, maint_func, cost_params, scale)
 
-    ev = get_ev(cost_params, trans_mat, obs_costs, disc_fac, alg_details)[0]
+    ev = get_ev(cost_params, trans_mat, obs_costs, disc_fac,
+                alg_details)[0]
 
     p_choice = choice_prob_gumbel(ev, obs_costs, disc_fac)
     maint_cost_dev = maint_func_dev(num_states, scale)
