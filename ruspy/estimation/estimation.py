@@ -215,6 +215,8 @@ def estimate_nfxp(
     result_cost_params["n_newt_kant_steps"] = config.total_newt_kant_count
     result_cost_params["time"] = timing
 
+    if "hessian_inverse" in min_result[0]:
+        result_cost_params["hessian_inverse"] = min_result[0]["hessian_inverse"]
     config.total_contr_count = 0
     config.total_newt_kant_count = 0
 

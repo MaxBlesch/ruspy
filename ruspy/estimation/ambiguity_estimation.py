@@ -1,7 +1,6 @@
 import numba
 import numpy as np
 from robupy.get_worst_case import get_worst_case_probs
-from ruspy.estimation.estimation_transitions import create_transition_matrix
 
 
 @numba.jit(nopython=True)
@@ -9,12 +8,9 @@ def create_worst_trans_mat(trans_mat, v, rho):
     num_states = trans_mat.shape[0]
     worst_trans_mat = np.zeros(shape=(num_states, num_states), dtype=np.float64)
     for s in range(num_states):
-        ind_non_zero = np.nonzero(trans_mat[s, :])[0]
-        p_min = np.amin(ind_non_zero)
-        p_max = np.amax(ind_non_zero)
-        p = trans_mat[s, p_min : p_max + 1]
-        v_intern = v[p_min : p_max + 1]
-        worst_trans_mat[s, p_min : p_max + 1] = get_worst_case_probs(
+        p = trans_mat[s, s: s + 3]
+        v_intern = v[0: s + 3]
+        worst_trans_mat[s, s: s + 3] = get_worst_case_probs(
             v_intern, p, rho, is_cost=False
         )
     return worst_trans_mat
@@ -22,12 +18,10 @@ def create_worst_trans_mat(trans_mat, v, rho):
 
 @numba.jit(nopython=True)
 def calc_fixp_worst(
-    num_states, p_ml, costs, disc_fac, rho, threshold=1e-8, max_it=10000
+    ev_start, trans_mat, costs, disc_fac, rho, threshold=1e-8, max_it=10000
 ):
-    ev = np.zeros(num_states)
-    worst_trans_mat = trans_mat = create_transition_matrix(num_states, p_ml)
-    ev_new = np.dot(trans_mat, np.log(np.sum(np.exp(-costs), axis=1)))
-    converge_crit = np.max(np.abs(ev_new - ev))
+    converge_crit = threshold + 1
+    ev_new = ev_start
     num_eval = 0
     success = True
     while converge_crit > threshold:

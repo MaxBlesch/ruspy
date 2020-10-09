@@ -67,14 +67,16 @@ def loglike_cost_params_individual(
     if "omega" in params.index:
         omega = params.loc["omega", "value"]
         cost_params = params.drop("omega")["value"].to_numpy()
-        print(cost_params, omega)
         p_ml = trans_mat[0, 0: 3]
         sample_size = 4292
         rho = chi2.ppf(omega, len(p_ml) - 1) / (2 * (sample_size))
 
         costs = calc_obs_costs(num_states, maint_func, cost_params, scale)
+        ev_start, _, _ = get_ev(
+            cost_params, trans_mat, costs, disc_fac, alg_details
+        )
         ev, success, converge_crit, num_eval = calc_fixp_worst(
-            num_states, p_ml, costs, disc_fac, rho, threshold=1e-6, max_it=1000000
+            ev_start, trans_mat, costs, disc_fac, rho, threshold=1e-6, max_it=1000000
         )
 
         if not success:
