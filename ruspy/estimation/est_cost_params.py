@@ -68,7 +68,7 @@ def loglike_cost_params_individual(
         omega = params.loc["omega", "value"]
         cost_params = params.drop("omega")["value"].to_numpy()
         p_ml = trans_mat[0, 0: 3]
-        sample_size = 4292
+        sample_size = 4292 / 78
         rho = chi2.ppf(omega, len(p_ml) - 1) / (2 * (sample_size))
 
         costs = calc_obs_costs(num_states, maint_func, cost_params, scale)
