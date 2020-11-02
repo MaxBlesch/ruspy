@@ -8,8 +8,11 @@ def create_worst_trans_mat(trans_mat, v, rho):
     num_states = trans_mat.shape[0]
     worst_trans_mat = np.zeros(shape=(num_states, num_states), dtype=np.float64)
     for s in range(num_states):
-        p = trans_mat[s, s: s + 3]
-        v_intern = v[0: s + 3]
+        ind_non_zero = np.nonzero(trans_mat[s, :])[0]
+        p_min = np.amin(ind_non_zero)
+        p_max = np.amax(ind_non_zero)
+        p = trans_mat[s, p_min : p_max + 1]
+        v_intern = v[p_min : p_max + 1]
         worst_trans_mat[s, s: s + 3] = get_worst_case_probs(
             v_intern, p, rho, is_cost=False
         )
