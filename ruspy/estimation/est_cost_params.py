@@ -76,7 +76,7 @@ def loglike_cost_params_individual(
             cost_params, trans_mat, costs, disc_fac, alg_details
         )
         ev, success, converge_crit, num_eval = calc_fixp_worst(
-            ev_start, trans_mat, costs, disc_fac, rho, threshold=1e-6, max_it=1000000
+            ev_start, trans_mat, costs, disc_fac, rho, threshold=1e-3, max_it=1000000
         )
 
         if not success:
