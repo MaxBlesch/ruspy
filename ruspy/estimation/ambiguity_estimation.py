@@ -13,7 +13,7 @@ def create_worst_trans_mat(trans_mat, v, rho):
         p_max = np.amax(ind_non_zero)
         p = trans_mat[s, p_min : p_max + 1]
         v_intern = v[p_min : p_max + 1]
-        worst_trans_mat[s, s: s + 3] = get_worst_case_probs(
+        worst_trans_mat[s, p_min: p_max + 1] = get_worst_case_probs(
             v_intern, p, rho, is_cost=False
         )
     return worst_trans_mat
