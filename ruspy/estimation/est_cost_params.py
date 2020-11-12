@@ -140,7 +140,6 @@ def loglike_cost_params(
         The negative log likelihood based on the data.
 
     """
-    print(params["value"].to_numpy())
     log_like_sum = loglike_cost_params_individual(
         params,
         maint_func,
@@ -153,7 +152,6 @@ def loglike_cost_params(
         scale,
         alg_details,
     ).sum()
-    print(log_like_sum)
     return log_like_sum
 
 
