@@ -12,9 +12,8 @@ from ruspy.model_code.cost_functions import calc_obs_costs
 from ruspy.model_code.fix_point_alg import calc_fixp
 from ruspy.model_code.fix_point_alg import contr_op_dev_wrt_params
 from ruspy.model_code.fix_point_alg import contr_op_dev_wrt_rc
-from ruspy.model_code.fix_point_alg import solve_equ_system_fixp,\
-    calc_value_function_with_ev
-from ruspy.estimation.ambiguity_estimation import worst_value_fixp
+from ruspy.model_code.fix_point_alg import solve_equ_system_fixp
+from ruspy.estimation.ambiguity_estimation import worst_value_fixp, value_function_contraction
 from scipy.stats import chi2
 
 
@@ -73,13 +72,10 @@ def loglike_cost_params_individual(
         rho = chi2.ppf(omega, len(p_ml) - 1) / (2 * (sample_size))
 
         costs = calc_obs_costs(num_states, maint_func, cost_params, scale)
-        v_start, _, _ = calc_value_function_with_ev(
-            trans_mat,
-            costs,
-            disc_fac,
+        v_start, _, _, _ = value_function_contraction(
+            trans_mat, costs, disc_fac, threshold=1e-12, max_it=1000000
         )
-        v_worst, worst_trans_mat, success, converge_crit_ev, num_eval = \
-            worst_value_fixp(
+        v_worst, worst_trans_mat, success, converge_crit_ev, num_eval = worst_value_fixp(
             v_start, trans_mat, costs, disc_fac, rho, threshold=1e-3, max_it=1000000
         )
         ev = np.dot(worst_trans_mat, v_worst)
@@ -144,7 +140,7 @@ def loglike_cost_params(
         The negative log likelihood based on the data.
 
     """
-
+    print(params["value"].to_numpy())
     log_like_sum = loglike_cost_params_individual(
         params,
         maint_func,
@@ -157,6 +153,7 @@ def loglike_cost_params(
         scale,
         alg_details,
     ).sum()
+    print(log_like_sum)
     return log_like_sum
 
 
