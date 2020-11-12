@@ -12,8 +12,9 @@ from ruspy.model_code.cost_functions import calc_obs_costs
 from ruspy.model_code.fix_point_alg import calc_fixp
 from ruspy.model_code.fix_point_alg import contr_op_dev_wrt_params
 from ruspy.model_code.fix_point_alg import contr_op_dev_wrt_rc
-from ruspy.model_code.fix_point_alg import solve_equ_system_fixp
-from ruspy.estimation.ambiguity_estimation import calc_fixp_worst
+from ruspy.model_code.fix_point_alg import solve_equ_system_fixp,\
+    calc_value_function_with_ev
+from ruspy.estimation.ambiguity_estimation import worst_value_fixp
 from scipy.stats import chi2
 
 
@@ -72,13 +73,16 @@ def loglike_cost_params_individual(
         rho = chi2.ppf(omega, len(p_ml) - 1) / (2 * (sample_size))
 
         costs = calc_obs_costs(num_states, maint_func, cost_params, scale)
-        ev_start, _, _ = get_ev(
-            cost_params, trans_mat, costs, disc_fac, alg_details
+        v_start, _, _ = calc_value_function_with_ev(
+            trans_mat,
+            costs,
+            disc_fac,
         )
-        ev, success, converge_crit, num_eval = calc_fixp_worst(
-            ev_start, trans_mat, costs, disc_fac, rho, threshold=1e-3, max_it=1000000
+        v_worst, worst_trans_mat, success, converge_crit_ev, num_eval = \
+            worst_value_fixp(
+            v_start, trans_mat, costs, disc_fac, rho, threshold=1e-3, max_it=1000000
         )
-
+        ev = np.dot(worst_trans_mat, v_worst)
         if not success:
             raise ValueError("Not converging.")
     else:

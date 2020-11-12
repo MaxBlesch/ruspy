@@ -3,6 +3,27 @@ import numpy as np
 from ruspy.model_code.choice_probabilities import choice_prob_gumbel
 
 
+def calc_value_function_with_ev(
+        trans_mat,
+        obs_costs,
+        disc_fac,
+        threshold=1e-12,
+        switch_tol=1e-3,
+        max_contr_steps=20,
+        max_newt_kant_steps=20
+):
+    ev, contr_step_count, newt_kant_step_count = calc_fixp(
+        trans_mat,
+        obs_costs,
+        disc_fac,
+        threshold=threshold,
+        switch_tol=switch_tol,
+        max_contr_steps=max_contr_steps,
+        max_newt_kant_steps=max_newt_kant_steps)
+    v = np.dot(np.linalg.inv(trans_mat), ev)
+    return v, contr_step_count, newt_kant_step_count
+
+
 def calc_fixp(
     trans_mat,
     obs_costs,
