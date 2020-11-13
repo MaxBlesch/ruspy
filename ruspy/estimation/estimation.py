@@ -60,7 +60,7 @@ def estimate(
     """
     transition_results = estimate_transitions(df)
 
-    endog = df.loc[(slice(None), slice(1, None)), "decision"].to_numpy(int)
+    endog = df.loc[(slice(None), slice(1, None)), "decision"].to_numpy(np.int8)
     states = df.loc[(slice(None), slice(1, None)), "state"].to_numpy(int)
 
     args = (

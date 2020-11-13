@@ -140,7 +140,6 @@ def loglike_cost_params(
         The negative log likelihood based on the data.
 
     """
-    print(params["value"].to_numpy())
     log_like_sum = loglike_cost_params_individual(
         params,
         maint_func,
@@ -153,7 +152,6 @@ def loglike_cost_params(
         scale,
         alg_details,
     ).sum()
-    print(log_like_sum)
     return log_like_sum
 
 
@@ -411,7 +409,7 @@ def create_state_matrix(states, num_states):
 
     """
     num_obs = states.shape[0]
-    state_mat = np.full((num_states, num_obs), 0.0)
+    state_mat = np.zeros((num_states, num_obs), dtype=numba.int8)
     for i, value in enumerate(states):
-        state_mat[value, i] = 1.0
+        state_mat[value, i] = 1
     return state_mat
